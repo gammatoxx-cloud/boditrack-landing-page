@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BodiTrack — See Your Body Change Over Time</title>
+  <meta name="description" content="Track your body transformation with weekly photos and measurements. See progress the mirror can't show you.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================
+       RESET & CUSTOM PROPERTIES
+    ============================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-page:        #F2F2E8;
+      --bg-card:        #EAEADE;
+      --bg-card-hover:  #E0E0D4;
+      --accent:         #6BAA85;
+      --text-primary:   #1A1A1A;
+      --text-secondary: #555550;
+      --text-muted:     #999990;
+      --border:         rgba(26, 26, 26, 0.14);
+      --border-strong:  rgba(26, 26, 26, 0.32);
+
+      --font-mono: 'Geist Mono', ui-monospace, 'Courier New', monospace;
+
+      --tracking-label:   0.12em;
+      --tracking-tight:  -0.02em;
+      --tracking-tighter:-0.03em;
+
+      --section-gap:    clamp(80px, 10vw, 140px);
+      --content-max:    1120px;
+      --content-padding:clamp(20px, 5vw, 40px);
+      --card-radius:    20px;
+      --btn-radius:     999px;
+      --card-padding:   clamp(20px, 3vw, 32px);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-mono);
+      background: var(--bg-page);
+      color: var(--text-secondary);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; }
+    input { font-family: inherit; }
+
+    .container {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: 0 var(--content-padding);
+    }
+
+    /* ============================
+       SECTION LABEL
+    ============================ */
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .section-label--accent { color: var(--accent); }
+
+    /* ============================
+       ANIMATIONS
+    ============================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .hero-word { opacity: 1 !important; transform: none !important; transition: none !important; }
+    }
+
+    /* ============================
+       NAVIGATION
+    ============================ */
+    .nav {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      z-index: 100;
+      background: var(--bg-page);
+      border-bottom: 1px solid var(--border);
+      padding: 0 var(--content-padding);
+    }
+
+    .nav-inner {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+    }
+
+    .nav-logo {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-primary);
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: var(--bg-page);
+      font-family: var(--font-mono);
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      padding: 10px 22px;
+      border-radius: var(--btn-radius);
+      border: 1.5px solid var(--accent);
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+
+    .nav-cta:hover {
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .nav-cta .mobile-only { display: none; }
+    .nav-cta .desktop-only { display: inline; }
+
+    @media (max-width: 520px) {
+      .nav-cta .mobile-only { display: inline; }
+      .nav-cta .desktop-only { display: none; }
+    }
+
+    /* ============================
+       HERO
+    ============================ */
+    .hero {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      padding-top: 80px;
+      padding-bottom: 60px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .hero-content { position: relative; z-index: 2; }
+
+    .hero h1 {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: clamp(36px, 5.5vw, 68px);
+      line-height: 1.1;
+      letter-spacing: var(--tracking-tighter);
+      color: var(--text-primary);
+      margin-bottom: 24px;
+    }
+
+    .hero-word {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hero-word.visible { opacity: 1; transform: translateY(0); }
+
+    .hero-sub {
+      font-size: clamp(13px, 1.5vw, 16px);
+      color: var(--text-secondary);
+      line-height: 1.75;
+      max-width: 420px;
+      margin-bottom: 36px;
+    }
+
+    .cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: var(--bg-page);
+      font-family: var(--font-mono);
+      font-weight: 500;
+      font-size: 12px;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      padding: 16px 36px;
+      border-radius: var(--btn-radius);
+      border: 1.5px solid var(--accent);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .cta-primary:hover {
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .hero-scarcity {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+      font-size: 11px;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .hero-scarcity::before {
+      content: '';
+      flex-shrink: 0;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.75); }
+    }
+
+    .hero-scarcity strong {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .hero-waitlist-link {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 11px;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-strong);
+      padding-bottom: 1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .hero-waitlist-link:hover {
+      color: var(--text-secondary);
+      border-color: var(--text-secondary);
+    }
+
+    /* ============================
+       INSTRUMENT PANEL (hero visual)
+    ============================ */
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @keyframes rise-up {
+      from {
+        opacity: 0;
+        transform: translateY(36px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .hero-phone-wrap {
+      max-width: 640px;
+      width: 100%;
+      opacity: 0;
+      animation: rise-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 0.5s;
+    }
+
+    .hero-phone-img {
+      width: 100%;
+      display: block;
+    }
+
+    .instrument-panel {
+      width: 100%;
+      max-width: 400px;
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--card-radius);
+      background: var(--bg-card);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-header-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .panel-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .panel-status::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .panel-row {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .panel-row-label {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .panel-row-value {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-tighter);
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .panel-row-delta {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .panel-progress-track {
+      height: 5px;
+      background: rgba(26, 26, 26, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .panel-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+
+    .panel-gauge-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 18px 20px;
+    }
+
+    .panel-gauge {
+      position: relative;
+      width: 72px; height: 72px;
+      flex-shrink: 0;
+    }
+
+    .panel-gauge svg { width: 100%; height: 100%; }
+
+    .panel-gauge-value {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-tighter);
+      color: var(--text-primary);
+    }
+
+    .panel-gauge-info { flex: 1; }
+    .panel-gauge-info .panel-row-label { margin-bottom: 6px; }
+    .panel-gauge-info .panel-row-value { font-size: 17px; margin-bottom: 0; }
+
+    @media (max-width: 768px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+        text-align: center;
+      }
+      .hero-sub { margin-left: auto; margin-right: auto; }
+      .hero-visual { order: 1; }
+      .instrument-panel { max-width: 320px; margin: 0 auto; }
+    }
+
+    /* ============================
+       PROBLEM
+    ============================ */
+    .problem { padding: var(--section-gap) 0; }
+
+    .problem-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .problem-opener {
+      font-family: var(--font-mono);
+      font-size: clamp(28px, 4.5vw, 52px);
+      font-weight: 700;
+      letter-spacing: var(--tracking-tighter);
+      color: var(--text-primary);
+      margin-bottom: 36px;
+    }
+
+    .problem-divider {
+      width: 40px; height: 1px;
+      background: var(--border-strong);
+      margin: 0 auto 36px;
+    }
+
+    .problem-body {
+      font-size: clamp(15px, 1.7vw, 18px);
+      line-height: 1.8;
+      color: var(--text-secondary);
+    }
+
+    .problem-body p + p { margin-top: 1.2em; }
+
+    .problem-doubt {
+      display: block;
+      font-size: clamp(18px, 2.2vw, 23px);
+      font-style: italic;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 24px 0;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+    }
+
+    .problem-resolution {
+      font-family: var(--font-mono);
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      letter-spacing: var(--tracking-tighter);
+      color: var(--accent);
+      margin-top: 48px;
+    }
+
+    /* ============================
+       HOW IT WORKS
+    ============================ */
+    .how-it-works { padding: var(--section-gap) 0; }
+
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .step-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      padding: 56px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .step-row:last-child { border-bottom: none; }
+
+    .step-row--reverse .step-image { order: -1; }
+
+    .step-text { display: flex; flex-direction: column; gap: 16px; }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: rgba(107, 170, 133, 0.7);
+    }
+
+    .step-heading {
+      font-family: var(--font-mono);
+      font-size: clamp(22px, 2.8vw, 36px);
+      font-weight: 700;
+      letter-spacing: var(--tracking-tighter);
+      color: var(--text-primary);
+      line-height: 1.15;
+    }
+
+    .step-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      max-width: 38ch;
+    }
+
+    .step-image {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .step-image img {
+      width: 100%;
+      max-width: 420px;
+      object-fit: contain;
+      display: block;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .step-image:hover img {
+      transform: scale(1.03) translateY(-6px);
+    }
+
+    .reveal-from-right {
+      opacity: 0;
+      transform: translateX(24px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-from-left {
+      opacity: 0;
+      transform: translateX(-24px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-from-right.visible,
+    .reveal-from-left.visible { opacity: 1; transform: translateX(0); }
+
+    @media (max-width: 768px) {
+      .step-row {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 40px 0;
+      }
+      .step-row--reverse .step-image { order: 0; }
+      .step-image { order: -1; }
+      .step-image img { max-width: 280px; }
+      .step-desc { max-width: none; }
+      .reveal-from-right,
+      .reveal-from-left {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+    }
+
+    /* ============================
+       FEATURES
+    ============================ */
+    .features { padding: var(--section-gap) 0; }
+
+    .features .section-heading {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: clamp(20px, 2.8vw, 32px);
+      letter-spacing: var(--tracking-tighter);
+      text-transform: uppercase;
+      color: var(--text-primary);
+      margin-bottom: 32px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .feature-card {
+      border: 1.5px solid var(--accent);
+      border-radius: var(--card-radius);
+      padding: 22px 22px 20px;
+      background: var(--bg-card);
+      transition: background 0.2s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      transform: translateY(-3px);
+    }
+
+    .feature-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-primary);
+      line-height: 1.45;
+      flex: 1;
+    }
+
+    .feature-icon {
+      flex-shrink: 0;
+      width: 18px; height: 18px;
+      margin-top: 1px;
+    }
+
+    .feature-icon svg {
+      width: 18px; height: 18px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    @media (max-width: 768px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ============================
+       METRICS SHOWCASE
+    ============================ */
+    .metrics { padding: var(--section-gap) 0; }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .metric-card {
+      border: 1.5px solid var(--border);
+      border-radius: var(--card-radius);
+      padding: 28px 24px;
+      background: var(--bg-card);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .metric-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+
+    .metric-card-label {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      align-self: flex-start;
+    }
+
+    .metric-gauge {
+      position: relative;
+      width: 100px; height: 100px;
+      margin-bottom: 16px;
+    }
+
+    .metric-gauge svg { width: 100%; height: 100%; }
+
+    .metric-gauge-value {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-tighter);
+      color: var(--text-primary);
+    }
+
+    .metric-big {
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-tighter);
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .metric-sub {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .metric-bar-track {
+      width: 100%;
+      height: 5px;
+      background: rgba(26, 26, 26, 0.1);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: auto;
+    }
+
+    .metric-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+
+    .metric-dots {
+      display: flex;
+      gap: 6px;
+      margin-top: auto;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .metric-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(26, 26, 26, 0.35);
+    }
+
+    .metric-dot.filled {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      .metrics-grid { grid-template-columns: 1fr; gap: 10px; }
+    }
+
+    /* ============================
+       OFFER
+    ============================ */
+    .offer { padding: var(--section-gap) 0; }
+
+    .offer-card {
+      max-width: 600px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .offer-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+
+    .offer-card-head {
+      padding: 28px 32px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .offer-price {
+      font-family: var(--font-mono);
+      font-size: clamp(52px, 8vw, 80px);
+      font-weight: 700;
+      letter-spacing: var(--tracking-tighter);
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .offer-price-info { text-align: right; }
+
+    .offer-price-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .offer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .offer-row:last-child { border-bottom: none; }
+
+    .offer-row-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-primary);
+    }
+
+    .offer-row-value {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .offer-cta-area {
+      padding: 24px 32px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+    }
+
+    .hero .cta-primary {
+      font-size: 14px;
+      padding: 20px 48px;
+      white-space: nowrap;
+    }
+
+    .offer .cta-primary {
+      justify-content: center;
+      font-size: 12px;
+      padding: 17px 36px;
+    }
+
+    .offer-trust {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 520px) {
+      .offer-card-head { flex-direction: column; gap: 6px; }
+      .offer-price-info { text-align: left; }
+      .offer-row { padding: 12px 20px; }
+      .offer-cta-area { padding: 20px; }
+    }
+
+    /* ============================
+       WAITLIST
+    ============================ */
+    .waitlist { padding: var(--section-gap) 0; }
+
+    .waitlist-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .waitlist h2 {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: clamp(18px, 2.5vw, 26px);
+      letter-spacing: var(--tracking-tighter);
+      text-transform: uppercase;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .waitlist-sub {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+      line-height: 1.65;
+    }
+
+    .waitlist-form {
+      display: flex;
+      gap: 8px;
+    }
+
+    .waitlist-form input[type="email"] {
+      flex: 1;
+      background: var(--bg-page);
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--btn-radius);
+      padding: 13px 20px;
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .waitlist-form input[type="email"]::placeholder { color: var(--text-muted); }
+
+    .waitlist-form input[type="email"]:focus {
+      border-color: var(--accent);
+    }
+
+    .waitlist-form button {
+      background: var(--accent);
+      border: 1.5px solid var(--accent);
+      color: var(--bg-page);
+      font-family: var(--font-mono);
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      padding: 13px 22px;
+      border-radius: var(--btn-radius);
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+
+    .waitlist-form button:hover { opacity: 0.75; }
+
+    .waitlist-note {
+      margin-top: 14px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    .waitlist-success {
+      display: none;
+      font-size: 12px;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 500;
+      padding: 20px 0;
+    }
+
+    .waitlist-success.show { display: block; }
+    .waitlist-form.hidden { display: none; }
+
+    @media (max-width: 480px) {
+      .waitlist-form { flex-direction: column; }
+    }
+
+    /* ============================
+       FOOTER
+    ============================ */
+    .footer {
+      padding: 32px var(--content-padding);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-inner {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      letter-spacing: var(--tracking-label);
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .footer a {
+      color: var(--text-muted);
+      transition: color 0.2s;
+    }
+
+    .footer a:hover { color: var(--text-secondary); }
+
+    .footer .dot { margin: 0 8px; opacity: 0.4; }
+
+    @media (max-width: 520px) {
+      .footer-inner { flex-direction: column; gap: 8px; text-align: center; }
+    }
+
+    /* ============================
+       METRIC MEASUREMENTS TABLE
+    ============================ */
+    .metric-measurements {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .metric-measure-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+
+    .metric-measure-row:last-child { border-bottom: none; }
+
+    .metric-measure-name {
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 400;
+      flex: 1;
+    }
+
+    .metric-measure-value {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-right: 12px;
+    }
+
+    .metric-measure-delta {
+      color: var(--accent);
+      font-weight: 400;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================
+       NAVIGATION
+  ========================= -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <span class="nav-logo">BodiTrack</span>
+      <a href="#offer" class="nav-cta">
+        <span class="desktop-only">Get lifetime access — $10</span>
+        <span class="mobile-only">$10 Lifetime</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ========================
+       HERO
+  ========================= -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-grid">
+
+        <div class="hero-content">
+          <h1 aria-label="Your progress, made visible.">
+            <span class="hero-word">Your</span>
+            <span class="hero-word">progress,</span>
+            <br>
+            <span class="hero-word">made</span>
+            <span class="hero-word">visible.</span>
+          </h1>
+          <p class="hero-sub">BodiTrack tracks your transformation with weekly photos and body measurements — then shows you how far you've actually come.</p>
+          <a href="STRIPE_LINK" class="cta-primary" target="_blank" rel="noopener">Get lifetime access — $10</a>
+          <p class="hero-scarcity">First 1,000 users only. <strong><span class="spots-counter">47</span> spots remaining.</strong></p>
+          <a href="#waitlist" class="hero-waitlist-link">Just notify me when it launches &rarr;</a>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-phone-wrap">
+            <img src="hero-mockup.png" alt="BodiTrack app — before and after comparison view" class="hero-phone-img">
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================
+       HOW IT WORKS
+  ========================= -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <p class="section-label reveal">How It Works</p>
+      <div class="steps-list">
+
+        <div class="step-row reveal reveal-delay-1">
+          <div class="step-text">
+            <span class="step-num">01</span>
+            <h3 class="step-heading">Take a weekly photo</h3>
+            <p class="step-desc">Open the app, snap a photo, log your measurements. Under 60 seconds.</p>
+          </div>
+          <div class="step-image reveal-from-right">
+            <img src="step1.png" alt="BodiTrack log measurements screen">
+          </div>
+        </div>
+
+        <div class="step-row step-row--reverse reveal reveal-delay-1">
+          <div class="step-text">
+            <span class="step-num">02</span>
+            <h3 class="step-heading">BodiTrack remembers everything</h3>
+            <p class="step-desc">Every check-in is stored privately on your device. Your record grows week by week.</p>
+          </div>
+          <div class="step-image reveal-from-left">
+            <img src="step2.png" alt="BodiTrack check-in detail screen">
+          </div>
+        </div>
+
+        <div class="step-row reveal reveal-delay-1">
+          <div class="step-text">
+            <span class="step-num">03</span>
+            <h3 class="step-heading">See what the mirror can't</h3>
+            <p class="step-desc">Compare Day 1 to today. The change that was invisible up close becomes undeniable over time.</p>
+          </div>
+          <div class="step-image reveal-from-right">
+            <img src="step3.png" alt="BodiTrack before and after comparison screen">
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================
+       FEATURES
+  ========================= -->
+  <section class="features" id="features">
+    <div class="container">
+      <p class="section-label reveal">Features</p>
+      <h2 class="section-heading reveal">Everything you need. Nothing you don't.</h2>
+      <div class="features-grid">
+
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-card-top">
+            <h3>Before / After Collage</h3>
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </div>
+          </div>
+          <p>One tap generates a polished side-by-side card with your stats. Post it. The proof speaks for itself.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-card-top">
+            <h3>Beyond the Scale</h3>
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M2 12h20"/><path d="M6 8v8"/><path d="M10 6v12"/><path d="M14 9v6"/><path d="M18 4v16"/></svg>
+            </div>
+          </div>
+          <p>Track weight, waist, chest, hips, and arms. Body recomposition shows in measurements before weight.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-card-top">
+            <h3>Visual Timeline</h3>
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+          </div>
+          <p>Scroll through every check-in, month by month. Watch yourself change in real time.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-card-top">
+            <h3>100% Private</h3>
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+          </div>
+          <p>Your photos never leave your phone. No cloud upload. No account required. Your data is yours.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-card-top">
+            <h3>Home Screen Widget</h3>
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+            </div>
+          </div>
+          <p>Your streak and latest photo, glanceable every day. A quiet reminder the work is adding up.</p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-card-top">
+            <h3>Apple Health Sync</h3>
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+          </div>
+          <p>Weight data flows in and out of Apple Health automatically. No double-logging.</p>
+        </div>
+
+      </div>
+      <div style="display:flex; justify-content:center; margin-top:48px;">
+        <a href="STRIPE_LINK" class="cta-primary" target="_blank" rel="noopener">Get lifetime access — $10</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================
+       PROBLEM
+  ========================= -->
+  <section class="problem" id="problem">
+    <div class="container">
+      <div class="problem-inner">
+        <p class="section-label reveal">The Problem</p>
+        <p class="problem-opener reveal">You're showing up.</p>
+        <div class="problem-divider reveal"></div>
+        <div class="problem-body reveal">
+          <p>You're going to the gym. Watching what you eat. Doing the work. But the mirror looks the same as it did three weeks ago. The scale barely moves. And that quiet doubt starts creeping in —</p>
+          <em class="problem-doubt">"Is anything actually happening?"</em>
+          <p>It is. You just can't see it from this close.</p>
+          <p>The daily mirror only shows you today. It has no memory, no context, no patience.</p>
+        </div>
+        <p class="problem-resolution reveal">BodiTrack does.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================
+       METRICS SHOWCASE
+  ========================= -->
+  <section class="metrics" id="metrics">
+    <div class="container">
+      <p class="section-label reveal">Your Progress, Visualized</p>
+      <div class="metrics-grid">
+
+        <div class="metric-card reveal reveal-delay-1">
+          <p class="metric-card-label">Weight</p>
+          <!-- r=38, C=238.8, 54%→dashoffset=109.8 -->
+          <div class="metric-gauge">
+            <svg viewBox="0 0 100 100" fill="none">
+              <circle cx="50" cy="50" r="38" stroke="rgba(26,26,26,0.12)" stroke-width="5"/>
+              <circle cx="50" cy="50" r="38" stroke="#6BAA85" stroke-width="5"
+                stroke-dasharray="238.8" stroke-dashoffset="109.8"
+                stroke-linecap="round"
+                transform="rotate(-90 50 50)"/>
+            </svg>
+            <span class="metric-gauge-value">54%</span>
+          </div>
+          <p class="metric-big" style="font-size:28px">182.4 lb</p>
+          <p class="metric-sub">−8.2 lb since day 1</p>
+        </div>
+
+        <div class="metric-card reveal reveal-delay-2">
+          <p class="metric-card-label">Measurements</p>
+          <div class="metric-measurements">
+            <div class="metric-measure-row">
+              <span class="metric-measure-name">Waist</span>
+              <span class="metric-measure-value">33.5 in</span>
+              <span class="metric-measure-delta">−1.8 in</span>
+            </div>
+            <div class="metric-measure-row">
+              <span class="metric-measure-name">Arm</span>
+              <span class="metric-measure-value">14.2 in</span>
+              <span class="metric-measure-delta">−0.5 in</span>
+            </div>
+            <div class="metric-measure-row">
+              <span class="metric-measure-name">Chest</span>
+              <span class="metric-measure-value">38.5 in</span>
+              <span class="metric-measure-delta">−0.8 in</span>
+            </div>
+            <div class="metric-measure-row">
+              <span class="metric-measure-name">Hips</span>
+              <span class="metric-measure-value">39.1 in</span>
+              <span class="metric-measure-delta">−1.2 in</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card reveal reveal-delay-3" style="padding: 0; overflow: hidden; align-items: stretch;">
+          <div class="instrument-panel" style="border: none; border-radius: 0; background: transparent; max-width: none;">
+            <div class="panel-header">
+              <span class="panel-header-label">BodiTrack — Week 8</span>
+              <span class="panel-status">Tracking</span>
+            </div>
+            <div class="panel-row">
+              <div class="panel-row-top">
+                <span class="panel-row-label">Weight</span>
+                <span class="panel-row-delta">−8.2 lb this cycle</span>
+              </div>
+              <div class="panel-row-value">182.4 lb</div>
+              <div class="panel-progress-track">
+                <div class="panel-progress-fill" style="width:65%"></div>
+              </div>
+            </div>
+            <div class="panel-row">
+              <div class="panel-row-top">
+                <span class="panel-row-label">Waist</span>
+                <span class="panel-row-delta">−1.8 in this cycle</span>
+              </div>
+              <div class="panel-row-value">33.5 in</div>
+              <div class="panel-progress-track">
+                <div class="panel-progress-fill" style="width:48%"></div>
+              </div>
+            </div>
+            <div class="panel-gauge-row">
+              <div class="panel-gauge">
+                <!-- r=28, C=175.9, 67%→dashoffset=58.0 -->
+                <svg viewBox="0 0 72 72" fill="none">
+                  <circle cx="36" cy="36" r="28" stroke="rgba(26,26,26,0.12)" stroke-width="4.5"/>
+                  <circle cx="36" cy="36" r="28" stroke="#6BAA85" stroke-width="4.5"
+                    stroke-dasharray="175.9" stroke-dashoffset="58.0"
+                    stroke-linecap="round"
+                    transform="rotate(-90 36 36)"/>
+                </svg>
+                <span class="panel-gauge-value">67%</span>
+              </div>
+              <div class="panel-gauge-info">
+                <p class="panel-row-label">Week Streak</p>
+                <p class="panel-row-value" style="font-size:17px;margin-bottom:0">8 / 12 wks</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================
+       OFFER
+  ========================= -->
+  <section class="offer" id="offer">
+    <div class="container">
+      <div class="offer-card reveal">
+
+        <div class="offer-card-head">
+          <span class="offer-price">$10</span>
+          <div class="offer-price-info">
+            <p class="offer-price-title">Lifetime Access</p>
+            <p class="section-label section-label--accent" style="margin-bottom:0">Early Member Offer</p>
+          </div>
+        </div>
+
+        <div class="offer-rows">
+          <div class="offer-row">
+            <span class="offer-row-label">Lifetime Pro Access</span>
+            <span class="offer-row-value">Pay once, own it</span>
+          </div>
+          <div class="offer-row">
+            <span class="offer-row-label">All Current Features</span>
+            <span class="offer-row-value">Unlocked day one</span>
+          </div>
+          <div class="offer-row">
+            <span class="offer-row-label">Every Future Feature</span>
+            <span class="offer-row-value">No extra cost</span>
+          </div>
+          <div class="offer-row">
+            <span class="offer-row-label">No Subscription</span>
+            <span class="offer-row-value">No annual renewal</span>
+          </div>
+          <div class="offer-row">
+            <span class="offer-row-label">Spots Claimed</span>
+            <span class="offer-row-value"><span class="spots-counter">47</span> of 1,000</span>
+          </div>
+        </div>
+
+        <div class="offer-cta-area">
+          <a href="STRIPE_LINK" class="cta-primary" target="_blank" rel="noopener">Get lifetime access — $10</a>
+          <p class="offer-trust">Charged once &middot; No recurring fees &middot; Full refund if app isn't released within 12 months</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================
+       WAITLIST
+  ========================= -->
+  <section class="waitlist" id="waitlist">
+    <div class="container">
+      <div class="waitlist-inner reveal">
+        <h2>Not ready to pre-purchase?</h2>
+        <p class="waitlist-sub">Join the waitlist and we'll let you know when BodiTrack launches.</p>
+        <form class="waitlist-form" id="waitlist-form" action="WAITLIST_ENDPOINT" method="POST">
+          <input type="email" name="email" placeholder="Your email address" required autocomplete="email">
+          <button type="submit">Notify me</button>
+        </form>
+        <p class="waitlist-success" id="waitlist-success">You're on the list. We'll email you when BodiTrack launches.</p>
+        <p class="waitlist-note">At launch, Pro is $34.99/year. The $10 lifetime deal won't be available after the first 1,000 spots are gone.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================
+       FOOTER
+  ========================= -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>BodiTrack<span class="dot">&middot;</span>&copy; 2026</span>
+      <span>
+        <a href="#">Privacy Policy</a>
+      </span>
+    </div>
+  </footer>
+
+  <!-- ========================
+       SCRIPTS
+  ========================= -->
+  <script>
+    (function () {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // ── Scroll Reveal ──
+      const revealEls = document.querySelectorAll('.reveal, .reveal-from-right, .reveal-from-left');
+
+      if (prefersReducedMotion) {
+        revealEls.forEach(el => el.classList.add('visible'));
+      } else {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.12 });
+
+        revealEls.forEach(el => observer.observe(el));
+      }
+
+      // ── Hero Word-by-Word Reveal ──
+      const heroWords = document.querySelectorAll('.hero-word');
+      if (heroWords.length > 0) {
+        if (prefersReducedMotion) {
+          heroWords.forEach(w => w.classList.add('visible'));
+        } else {
+          heroWords.forEach((word, i) => {
+            word.style.transitionDelay = `${0.2 + i * 0.07}s`;
+          });
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              heroWords.forEach(w => w.classList.add('visible'));
+            });
+          });
+        }
+      }
+
+      // ── Scarcity Counter Animation ──
+      const counterEls = document.querySelectorAll('.spots-counter');
+      if (counterEls.length > 0 && !prefersReducedMotion) {
+        const targetNum = parseInt(counterEls[0].textContent, 10);
+        let animated = false;
+
+        const counterObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting && !animated) {
+              animated = true;
+              animateCounter(targetNum);
+              counterObserver.disconnect();
+            }
+          });
+        }, { threshold: 0.3 });
+
+        const offerSection = document.getElementById('offer');
+        if (offerSection) counterObserver.observe(offerSection);
+
+        function animateCounter(target) {
+          const duration = 1500;
+          const start = performance.now();
+
+          function tick(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = Math.round(eased * target);
+
+            counterEls.forEach(el => { el.textContent = current; });
+
+            if (progress < 1) requestAnimationFrame(tick);
+          }
+
+          requestAnimationFrame(tick);
+        }
+      }
+
+      // ── Smooth Scroll for Anchor Links ──
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          const target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+
+      // ── Waitlist Form ──
+      const form = document.getElementById('waitlist-form');
+      const success = document.getElementById('waitlist-success');
+
+      if (form) {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          const email = form.querySelector('input[type="email"]').value;
+
+          const action = form.getAttribute('action');
+          if (action && action !== 'WAITLIST_ENDPOINT') {
+            fetch(action, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email }),
+            }).catch(() => {});
+          }
+
+          form.classList.add('hidden');
+          success.classList.add('show');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
