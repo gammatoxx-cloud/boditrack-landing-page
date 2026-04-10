@@ -1120,7 +1120,7 @@
             <span class="hero-word">visible.</span>
           </h1>
           <p class="hero-sub">BodiTrack tracks your transformation with weekly photos and body measurements — then shows you how far you've actually come.</p>
-          <a href="STRIPE_LINK" class="cta-primary" target="_blank" rel="noopener">Get lifetime access — $10</a>
+          <a href="https://buy.stripe.com/8x24gy6degVYa0Z1FC1B600" class="cta-primary" target="_blank" rel="noopener">Get lifetime access — $10</a>
           <p class="hero-scarcity">First 1,000 users only. <strong><span class="spots-counter">47</span> spots remaining.</strong></p>
           <a href="#waitlist" class="hero-waitlist-link">Just notify me when it launches &rarr;</a>
         </div>
@@ -1251,7 +1251,7 @@
 
       </div>
       <div style="display:flex; justify-content:center; margin-top:48px;">
-        <a href="STRIPE_LINK" class="cta-primary" target="_blank" rel="noopener">Get lifetime access — $10</a>
+        <a href="https://buy.stripe.com/8x24gy6degVYa0Z1FC1B600" class="cta-primary" target="_blank" rel="noopener">Get lifetime access — $10</a>
       </div>
     </div>
   </section>
@@ -1416,7 +1416,7 @@
         </div>
 
         <div class="offer-cta-area">
-          <a href="STRIPE_LINK" class="cta-primary" target="_blank" rel="noopener">Get lifetime access — $10</a>
+          <a href="https://buy.stripe.com/8x24gy6degVYa0Z1FC1B600" class="cta-primary" target="_blank" rel="noopener">Get lifetime access — $10</a>
           <p class="offer-trust">Charged once &middot; No recurring fees &middot; Full refund if app isn't released within 12 months</p>
         </div>
 
@@ -1432,7 +1432,7 @@
       <div class="waitlist-inner reveal">
         <h2>Not ready to pre-purchase?</h2>
         <p class="waitlist-sub">Join the waitlist and we'll let you know when BodiTrack launches.</p>
-        <form class="waitlist-form" id="waitlist-form" action="WAITLIST_ENDPOINT" method="POST">
+        <form class="waitlist-form" id="waitlist-form" action="https://script.google.com/macros/s/AKfycbz7BUgS5Jq95E6c8ZvJDTWb6tFVI-BEBzrg_Kicey7DlRRVzNczlAUatxxhfEJhYNp5/exec" method="POST">
           <input type="email" name="email" placeholder="Your email address" required autocomplete="email">
           <button type="submit">Notify me</button>
         </form>
@@ -1555,11 +1555,11 @@
           const email = form.querySelector('input[type="email"]').value;
 
           const action = form.getAttribute('action');
-          if (action && action !== 'WAITLIST_ENDPOINT') {
+          if (action) {
             fetch(action, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: email }),
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: 'email=' + encodeURIComponent(email),
             }).catch(() => {});
           }
 
